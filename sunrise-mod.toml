@@ -1,0 +1,220 @@
+id = "statsplus"
+name = "Statistics+"
+version = "1.0.0"
+description = "A clearer Statistics screen: tabs, search, sorting, grouping, units, and local snapshots. Fully offline."
+authors = ["Zekrenlight"]
+license = "MIT"
+api = "0.2"
+side = "client"
+capabilities = ["registries"]
+
+# The Sunrise build and mixins tool commit this mod is compiled against.
+# Bump both with `cargo sunrise-mod update --sunrise <build>` when a new mod API lands.
+# Current pin: Sunrise Mod SDK 9425651 (94256510f74, 19 Nov 2026, API 0.2, game 26.3).
+[native]
+game = "26.3"
+sunrise = "94256510f74e6843754e0a93fd9e4da7e45b1056"
+mixins = "e59da9094f0c2fdda6c627fe9eff22dec6a906f0"
+
+# Statistics+ replaces the game's own Statistics screen and reads its stats
+# table, item registry and translations, none of which the typed API exposes.
+# So the whole game side is two support modules and the HEAD mixins below.
+[[native.module]]
+id = "session"
+file = "crates/sunrise-client/src/game/native_hooks/client_tick_post.rs"
+name = "statsplus"
+source = "src/native/session.rs"
+
+[[native.module]]
+id = "panel"
+file = "crates/sunrise-client/src/game/native_hooks/client_tick_post.rs"
+name = "statsplus_panel"
+source = "src/native/panel.rs"
+
+[[native.mixin]]
+id = "command"
+target = "sunrise_client::game::native_hooks::base::Game<'_>::native_command"
+kind = "HEAD"
+cancellable = true
+helper = "src/mixins/command.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+  { name = "command", ty = "&str", value = "command" },
+  { name = "ran", ty = "&mut bool", value = "&mut *ran" },
+]
+
+[[native.mixin]]
+id = "tick"
+target = "sunrise_client::game::native_hooks::client_tick_post::Game<'_>::native_client_tick_post"
+kind = "HEAD"
+helper = "src/mixins/tick.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+]
+
+[[native.mixin]]
+id = "frame"
+target = "sunrise_client::game::native_hooks::render_frame_pre::Game<'_>::native_render_frame_pre"
+kind = "HEAD"
+helper = "src/mixins/frame.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+]
+
+[[native.mixin]]
+id = "draw_stats"
+target = "sunrise_client::game::stats_screen::Game<'_>::draw_stats"
+kind = "HEAD"
+cancellable = true
+helper = "src/mixins/draw_stats.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+  { name = "batch", ty = "&mut sunrise_client::hud::HudBatch", value = "&mut *batch" },
+]
+
+[[native.mixin]]
+id = "screen"
+target = "sunrise_client::game::native_hooks::base::Game<'_>::native_screen_render_post"
+kind = "HEAD"
+helper = "src/mixins/screen.rs"
+bindings = [
+  { name = "game", ty = "&crate::game::Game<'_>", value = "self" },
+  { name = "batch", ty = "&mut sunrise_client::hud::HudBatch", value = "&mut *draw" },
+  { name = "screen", ty = "&mod_api::ScreenView<'_>", value = "screen" },
+]
+
+[[native.mixin]]
+id = "press"
+target = "sunrise_client::game::native_hooks::base::Game<'_>::native_screen_mouse_button_pressed_pre"
+kind = "HEAD"
+helper = "src/mixins/press.rs"
+bindings = [
+  { name = "game", ty = "&crate::game::Game<'_>", value = "self" },
+  { name = "screen", ty = "&mod_api::ScreenView<'_>", value = "screen" },
+  { name = "button", ty = "i32", value = "button" },
+  { name = "canceled", ty = "&mut bool", value = "&mut *canceled" },
+]
+
+[[native.mixin]]
+id = "release"
+target = "sunrise_client::game::native_hooks::base::Game<'_>::native_screen_mouse_button_released_pre"
+kind = "HEAD"
+helper = "src/mixins/release.rs"
+bindings = [
+  { name = "game", ty = "&crate::game::Game<'_>", value = "self" },
+  { name = "screen", ty = "&mod_api::ScreenView<'_>", value = "screen" },
+  { name = "button", ty = "i32", value = "button" },
+  { name = "canceled", ty = "&mut bool", value = "&mut *canceled" },
+]
+
+[[native.mixin]]
+id = "drag"
+target = "sunrise_client::game::native_hooks::base::Game<'_>::native_screen_mouse_dragged_pre"
+kind = "HEAD"
+helper = "src/mixins/drag.rs"
+bindings = [
+  { name = "game", ty = "&crate::game::Game<'_>", value = "self" },
+  { name = "screen", ty = "&mod_api::ScreenView<'_>", value = "screen" },
+  { name = "button", ty = "i32", value = "button" },
+  { name = "canceled", ty = "&mut bool", value = "&mut *canceled" },
+]
+
+[[native.mixin]]
+id = "scroll"
+target = "sunrise_client::game::native_hooks::base::Game<'_>::native_screen_mouse_scrolled_pre"
+kind = "HEAD"
+helper = "src/mixins/scroll.rs"
+bindings = [
+  { name = "game", ty = "&crate::game::Game<'_>", value = "self" },
+  { name = "screen", ty = "&mod_api::ScreenView<'_>", value = "screen" },
+  { name = "scroll", ty = "[f64; 2]", value = "scroll" },
+  { name = "canceled", ty = "&mut bool", value = "&mut *canceled" },
+]
+
+[[native.mixin]]
+id = "key"
+target = "sunrise_client::game::native_hooks::base::Game<'_>::native_screen_key_pressed_pre"
+kind = "HEAD"
+helper = "src/mixins/key.rs"
+bindings = [
+  { name = "game", ty = "&crate::game::Game<'_>", value = "self" },
+  { name = "screen", ty = "&mod_api::ScreenView<'_>", value = "screen" },
+  { name = "key", ty = "&str", value = "key" },
+  { name = "canceled", ty = "&mut bool", value = "&mut *canceled" },
+]
+
+[[native.mixin]]
+id = "char"
+target = "sunrise_client::game::native_hooks::base::Game<'_>::native_screen_char_typed_pre"
+kind = "HEAD"
+helper = "src/mixins/char.rs"
+bindings = [
+  { name = "game", ty = "&crate::game::Game<'_>", value = "self" },
+  { name = "screen", ty = "&mod_api::ScreenView<'_>", value = "screen" },
+  { name = "c", ty = "char", value = "c" },
+  { name = "canceled", ty = "&mut bool", value = "&mut *canceled" },
+]
+
+# The settings card (shared Sunrise dark card). Sunrise opens a mod's settings as its
+# Options page `NativeMod(index)` (SunnyMods' Settings button, Sunrise's Mods list and the
+# mod's own settings key all land there). These HEAD hooks act only on this mod's own page
+# and let every other page, and every other mod's card, through untouched.
+[[native.module]]
+id = "card"
+file = "crates/sunrise-client/src/game.rs"
+name = "statsplus_card"
+source = "src/native/card.rs"
+
+[[native.mixin]]
+id = "card_draw"
+target = "sunrise_client::game::options::Game<'_>::draw_options"
+kind = "HEAD"
+cancellable = true
+helper = "src/mixins/card_draw.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+  { name = "batch", ty = "&mut sunrise_client::hud::HudBatch", value = "&mut *batch" },
+]
+
+[[native.mixin]]
+id = "card_mouse"
+target = "sunrise_client::game::options::Game<'_>::options_mouse"
+kind = "HEAD"
+cancellable = true
+helper = "src/mixins/card_mouse.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+  { name = "pressed", ty = "bool", value = "pressed" },
+  { name = "right", ty = "bool", value = "right" },
+]
+
+[[native.mixin]]
+id = "card_drag"
+target = "sunrise_client::game::options::Game<'_>::options_drag"
+kind = "HEAD"
+cancellable = true
+helper = "src/mixins/card_drag.rs"
+bindings = [{ name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" }]
+
+[[native.mixin]]
+id = "card_scroll"
+target = "sunrise_client::game::options::Game<'_>::options_scroll"
+kind = "HEAD"
+cancellable = true
+helper = "src/mixins/card_scroll.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+  { name = "amount", ty = "f32", value = "amount" },
+]
+
+[[native.mixin]]
+id = "card_key"
+target = "sunrise_client::game::options::Game<'_>::options_key"
+kind = "HEAD"
+cancellable = true
+helper = "src/mixins/card_key.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+  { name = "key", ty = "KeyCode", value = "key" },
+  { name = "text", ty = "Option<&str>", value = "text" },
+]
