@@ -7,6 +7,14 @@ It replaces the pause-menu Statistics button with a searchable, sortable live st
 
 This is an independent implementation. It makes no network requests of its own: no author API, news, credits or announcements. It does not collect, hash or store machine or hardware identifiers. The only traffic is the game's own request-stats command to the server you are playing on.
 
+<img width="1116" height="840" alt="image" src="https://github.com/user-attachments/assets/4a39fe52-0c6e-4f37-8f3a-3073475e3929" />
+<img width="1116" height="840" alt="image" src="https://github.com/user-attachments/assets/f471ecca-7304-4ea8-9d6f-de835bd8eb07" />
+<img width="1116" height="840" alt="image" src="https://github.com/user-attachments/assets/666b450b-c13a-4dfe-8c74-ed0c1689de60" />
+<img width="1116" height="840" alt="image" src="https://github.com/user-attachments/assets/606d5cd7-c8ec-489b-9f0e-10eb8c106313" />
+<img width="1116" height="840" alt="image" src="https://github.com/user-attachments/assets/d0870387-e1bf-4149-a02f-c6f6d795303d" />
+<img width="1116" height="840" alt="image" src="https://github.com/user-attachments/assets/5e5c02d4-782a-49f9-b7ee-e97b0c207e05" />
+
+
 ## Features
 
 - Click **Statistics** on the pause menu to open Statistics+.
