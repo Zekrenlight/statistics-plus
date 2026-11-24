@@ -1,6 +1,6 @@
 id = "statsplus"
 name = "Statistics+"
-version = "1.0.1"
+version = "1.0.2"
 description = "A clearer Statistics screen: tabs, search, sorting, grouping, units, and local snapshots. Fully offline."
 authors = ["Zekrenlight"]
 license = "MIT"
