@@ -82,6 +82,14 @@ thread_local! {
     static SESSION: RefCell<Session> = RefCell::new(Session::default());
 }
 
+fn data_dir(game: &crate::game::Game<'_>) -> std::path::PathBuf {
+    game.instance_dir().join("sunrise-mod-data").join(MOD_ID)
+}
+
+fn say(game: &mut crate::game::Game<'_>, message: impl AsRef<str>) {
+    game.chat_line(sunrise_client::text::Text::literal(message.as_ref().to_string()));
+}
+
 pub fn revise<R>(f: impl FnOnce(&mut Session) -> R) -> R {
     SESSION.with(|c| f(&mut c.borrow_mut()))
 }
@@ -119,11 +127,11 @@ pub fn ensure_ready(game: &crate::game::Game<'_>) {
 }
 
 fn prefs_path(game: &crate::game::Game<'_>) -> PathBuf {
-    game.native_data_dir(MOD_ID).join(FILE_NAME)
+    data_dir(game).join(FILE_NAME)
 }
 
 fn snapshots_dir(game: &crate::game::Game<'_>) -> PathBuf {
-    game.native_data_dir(MOD_ID).join("snapshots")
+    data_dir(game).join("snapshots")
 }
 
 fn load_prefs_from(game: &crate::game::Game<'_>) {
@@ -134,7 +142,7 @@ fn load_prefs_from(game: &crate::game::Game<'_>) {
 }
 
 pub fn write_prefs(game: &crate::game::Game<'_>) {
-    let dir = game.native_data_dir(MOD_ID);
+    let dir = data_dir(game);
     let _ = fs::create_dir_all(&dir);
     let text = revise(|s| dump_prefs(&s.prefs));
     let _ = fs::write(prefs_path(game), text);
@@ -510,8 +518,8 @@ pub fn handle_command(game: &mut crate::game::Game<'_>, command: &str, ran: &mut
     match cmd.to_ascii_lowercase().as_str() {
         "panel" | "open" => toggle_panel(game),
         "save" => match save_snapshot(game) {
-            Ok(name) => game.native_chat(&format!("Statistics+: saved {name}")),
-            Err(e) => game.native_chat(&format!("Statistics+: save failed: {e}")),
+            Ok(name) => say(game, &format!("Statistics+: saved {name}")),
+            Err(e) => say(game, &format!("Statistics+: save failed: {e}")),
         },
         "load" => {
             refresh_files(game);
@@ -521,15 +529,15 @@ pub fn handle_command(game: &mut crate::game::Game<'_>, command: &str, ran: &mut
                 arg.to_string()
             };
             if name.is_empty() {
-                game.native_chat("Statistics+: no snapshots saved yet.");
+                say(game, "Statistics+: no snapshots saved yet.");
             } else {
                 match load_named_snapshot(game, &name) {
                     Ok(()) => {
                         let label = revise(|s| s.viewing.clone()).unwrap_or(name);
-                        game.native_chat(&format!("Statistics+: loaded {label}"));
+                        say(game, &format!("Statistics+: loaded {label}"));
                         request_and_open(game, game.screen == crate::game::Screen::Paused);
                     }
-                    Err(e) => game.native_chat(&format!("Statistics+: load failed: {e}")),
+                    Err(e) => say(game, &format!("Statistics+: load failed: {e}")),
                 }
             }
         }
@@ -539,12 +547,12 @@ pub fn handle_command(game: &mut crate::game::Game<'_>, command: &str, ran: &mut
                 s.prefs.show_empty
             });
             write_prefs(game);
-            game.native_chat(&format!(
+            say(game, &format!(
                 "Statistics+: show empty is {}",
                 if on { "on" } else { "off" }
             ));
         }
-        _ => game.native_chat(
+        _ => say(game, 
             "Statistics+: /statsplus panel | save | load [name] | empty | help",
         ),
     }

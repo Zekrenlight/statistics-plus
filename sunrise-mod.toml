@@ -13,7 +13,7 @@ capabilities = ["registries"]
 # Current pin: Sunrise Mod SDK 3d34bbe (3d34bbe63d71, 24 Nov 2026, API 0.2, game 26.3).
 [native]
 game = "26.3"
-sunrise = "3d34bbe63d71bb24c098c1e4021ef866be12fe2d"
+sunrise = "ba1f24e4ad41246b558230aa665539dc768b1287"
 mixins = "e59da9094f0c2fdda6c627fe9eff22dec6a906f0"
 
 # Statistics+ replaces the game's own Statistics screen and reads its stats
@@ -32,24 +32,22 @@ name = "statsplus_panel"
 source = "src/native/panel.rs"
 
 [[native.mixin]]
-id = "command"
-target = "sunrise_client::game::native_hooks::base::Game<'_>::native_command"
-kind = "HEAD"
-cancellable = true
-helper = "src/mixins/command.rs"
-bindings = [
-  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
-  { name = "command", ty = "&str", value = "command" },
-  { name = "ran", ty = "&mut bool", value = "&mut *ran" },
-]
-
-[[native.mixin]]
 id = "tick"
 target = "sunrise_client::game::native_hooks::client_tick_post::Game<'_>::native_client_tick_post"
 kind = "HEAD"
 helper = "src/mixins/tick.rs"
 bindings = [
   { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+]
+
+[[native.mixin]]
+id = "command"
+target = "sunrise_client::game::native_server::Game<'_>::run_client_native_command"
+kind = "HEAD"
+helper = "src/mixins/command.rs"
+bindings = [
+  { name = "game", ty = "&mut crate::game::Game<'_>", value = "&mut *self" },
+  { name = "line", ty = "&str", value = "line" },
 ]
 
 [[native.mixin]]

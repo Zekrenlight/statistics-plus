@@ -10,7 +10,7 @@ pub mod logic;
 #[cfg(test)]
 mod rules_tests;
 
-use mod_api::Hooks;
+use mod_api::{ClientHost, Command, Hooks, RegisterClientCommandsEvent};
 
 #[derive(Default)]
 struct StatsPlus;
@@ -24,4 +24,16 @@ impl Hooks for StatsPlus {
                 .tooltip("statsplus.setting.accent.tooltip"),
         );
     }
+
+    fn register_client_commands(
+        &self,
+        _host: &mut dyn ClientHost,
+        event: &mut RegisterClientCommandsEvent<'_>,
+    ) {
+        // The real work runs in the `run_client_native_command` mixin, which
+        // has `&mut Game` (needed to open the screen). These registrations
+        // put the command in the client dispatcher so it is not sent to the server.
+        event.commands.push(Command::new("statsplus [sub:text]").executes_client(|_, _| Some(1)));
+    }
+
 }
